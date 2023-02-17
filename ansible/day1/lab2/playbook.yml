@@ -1,0 +1,60 @@
+- name: Deploy Django Project
+  hosts: django
+  become: true 
+  tasks:
+  - name: Copy Django Project to ec2
+    copy:
+      src: Booster_CI_CD_Project.zip
+      dest: /home/ubuntu/
+  - name: install zip
+    apt:
+      name: zip
+      state: present
+
+  - name: Unarchiving
+    unarchive:
+      src: /home/ubuntu/Booster_CI_CD_Project.zip
+      dest: /home/ubuntu/
+      remote_src: yes
+
+  - name: install python3
+    apt:
+      name: python3
+      state: latest
+
+  - name: install python3-pip
+    apt:
+      update_cache: yes
+      name: python3-pip
+      state: latest
+
+  - name: Install requirements.txt
+    pip:
+      requirements: /home/ubuntu/Booster_CI_CD_Project/requirements.txt
+      executable: pip3
+
+  - name: Get the public IP address
+    command: bash -c "curl -s http://169.254.169.254/latest/meta-data/public-ipv4"
+    register: ec2_ip      
+
+  - name: add public ip to allowed hosts
+    lineinfile: 
+        path: /home/ubuntu/Booster_CI_CD_Project/simpleApp/settings.py
+        regexp: "^ALLOWED_HOSTS"
+        line: "ALLOWED_HOSTS=[\"{{ ec2_ip.stdout }}\"]"
+
+  - name: DB migrations
+    command: "python3 /home/ubuntu/Booster_CI_CD_Project/manage.py makemigrations"
+
+  - name: apply migrations
+    command: "python3 /home/ubuntu/Booster_CI_CD_Project/manage.py migrate"
+
+  - name: Start Django server
+    shell: cd /home/ubuntu/Booster_CI_CD_Project; python3 manage.py runserver 0.0.0.0:8000 &
+    async: 0
+    poll: 0
+
+
+
+
+
