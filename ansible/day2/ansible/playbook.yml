@@ -1,0 +1,21 @@
+- name: Install Nexus
+  hosts: private_instance1
+  become: true
+  gather_facts: false
+  vars:
+    ansible_user: ubuntu
+    ansible_become: true
+    ansible_become_method: sudo
+  roles: 
+    - roles/sonatype
+
+
+
+
+- name: Install SonarQube 
+  hosts: private_instance2
+  become: true
+  gather_facts: false
+  roles: 
+    - roles/postgresql
+    - roles/SonarQube

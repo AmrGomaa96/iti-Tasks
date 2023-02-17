@@ -1,0 +1,68 @@
+- name: Update package indexes
+  apt:
+    update_cache: yes
+
+- name: Install wget
+  apt:
+    name: wget
+    state: present
+
+- name: Install OpenJDK 1.8
+  apt:
+    name: openjdk-8-jdk
+    state: present
+
+- name: Create a directory if it does not exist
+  file:
+    path: "{{ path }}"
+    state: directory
+  
+
+- name: Download nexus and unarchive
+  unarchive:
+    src: https://download.sonatype.com/nexus/3/nexus-3.47.1-01-unix.tar.gz
+    dest: "{{ path }}"
+    remote_src: yes
+
+- name: rename nexus folder
+  command: "mv {{ path }}/nexus-3.47.1-01 {{ path }}/nexus"
+
+
+- name: Add new user nexus 
+  user:
+    name: nexus
+    comment: nexus
+
+- name: Change the ownership of nexus files and nexus data directory to nexus user
+  file:
+    path: "{{ path }}/nexus"
+    owner: nexus
+    group: nexus
+    recurse: yes
+
+- name: Change the ownership of nexus files and nexus data directory to nexus user
+  file:
+    path: "{{ path }}/sonatype-work"
+    owner: nexus
+    group: nexus
+    recurse: yes
+
+- name: Uncomment run_as_user parameter and set it as following
+  replace:
+    path: "{{ path }}/nexus/bin/nexus.rc"
+    regexp: '^#run_as_user=""'
+    replace: 'run_as_user="nexus"'
+
+
+- name: move nexus.service file in different place
+  copy:
+    src: nexus.service
+    dest: /etc/systemd/system/ 
+
+# - name: add nexus service to boot
+#   command: sudo chkconfig nexus on
+
+- name: start nexus
+  service:
+    name: nexus
+    state: started

@@ -1,0 +1,5 @@
+[bastion]
+ bastion ansible_host=3.81.37.91 ansible_user=ubuntu ansible_ssh_private_key_file=./key.pem
+[private_instance]
+ private_instance1 ansible_host=10.0.1.170 ansible_user=ubuntu ansible_ssh_private_key_file=./key.pem ansible_ssh_common_args='-o ProxyCommand="ssh bastion -W %h:%p"'
+ private_instance2 ansible_host=10.0.3.107 ansible_user=ubuntu ansible_ssh_private_key_file=./key.pem ansible_ssh_common_args='-o ProxyCommand="ssh bastion -W %h:%p"'
